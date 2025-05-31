@@ -14,7 +14,7 @@ from functools import lru_cache
 import boto3
 import psycopg2
 from psycopg2.extras import execute_batch
-import requests
+from security import safe_requests
 
 # Configure logging
 logger = logging.getLogger()
@@ -135,7 +135,7 @@ class ForecastSyncHandler:
         headers = {"Authorization": f"Bearer {neon_creds['api_key']}", "Content-Type": "application/json"}
 
         # Get branches
-        response = requests.get(f"https://console.neon.tech/api/v2/projects/{neon_creds['project_id']}/branches", headers=headers)
+        response = safe_requests.get(f"https://console.neon.tech/api/v2/projects/{neon_creds['project_id']}/branches", headers=headers)
         response.raise_for_status()
 
         branches = response.json()
@@ -143,7 +143,7 @@ class ForecastSyncHandler:
             if branch["name"] == branch_name:
                 branch_id = branch["id"]
                 # Get connection string
-                conn_response = requests.get(f"https://console.neon.tech/api/v2/projects/{neon_creds['project_id']}/branches/{branch_id}/connection_string", headers=headers)
+                conn_response = safe_requests.get(f"https://console.neon.tech/api/v2/projects/{neon_creds['project_id']}/branches/{branch_id}/connection_string", headers=headers)
                 conn_response.raise_for_status()
                 return conn_response.json()["connection_string"]
 
