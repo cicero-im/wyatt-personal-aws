@@ -1,11 +1,11 @@
 import numpy as np
 from datetime import datetime, timedelta
-import random
 
 # PySpark imports
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, udf, percentile_approx, expr
 from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType, ArrayType
+import secrets
 
 
 def create_spark_session(app_name="ForecastSimulation"):
@@ -43,31 +43,31 @@ def generate_base_data(spark, config):
     end_date = config["end_date"]
 
     # Set seed for reproducibility
-    random.seed(42)
+    secrets.SystemRandom().seed(42)
     np.random.seed(42)
 
     # Generate restaurant IDs (5 digits, zero-padded between 00000 and 30000)
     restaurant_ids = []
     while len(restaurant_ids) < n_restaurants:
-        new_id = f"{random.randint(0, 30000):05d}"
+        new_id = f"{secrets.SystemRandom().randint(0, 30000):05d}"
         if new_id not in restaurant_ids:
             restaurant_ids.append(new_id)
 
     # Generate inventory item IDs (integers between 1 and 2000)
-    inventory_item_ids = [str(id) for id in random.sample(range(1, 2001), n_inventory_items)]
+    inventory_item_ids = [str(id) for id in secrets.SystemRandom().sample(range(1, 2001), n_inventory_items)]
 
     # Generate business dates
     n_days = (end_date - start_date).days
     business_dates = [(start_date + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(n_days)]
 
     # Generate DMA IDs (3 letter codes - 30 unique)
-    dma_ids = ["".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=3)) for _ in range(30)]
+    dma_ids = ["".join(secrets.SystemRandom().choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=3)) for _ in range(30)]
 
     # Generate DC IDs (integers between 1 and 60)
     dc_ids = [str(i) for i in range(1, 61)]
 
     # Generate states (5 unique US state abbreviations)
-    states = random.sample(["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"], 5)
+    states = secrets.SystemRandom().sample(["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"], 5)
 
     # Generate model parameters (drawn once and reused across simulations)
     # Restaurant random effects (normal distribution)
@@ -81,9 +81,9 @@ def generate_base_data(spark, config):
     print(f"decay_effects: {decay_effects}")
 
     # Assign DMA, DC, and state to each restaurant (these don't change)
-    restaurant_dma = {rest_id: random.choice(dma_ids) for rest_id in restaurant_ids}
-    restaurant_dc = {rest_id: random.choice(dc_ids) for rest_id in restaurant_ids}
-    restaurant_state = {rest_id: random.choice(states) for rest_id in restaurant_ids}
+    restaurant_dma = {rest_id: secrets.choice(dma_ids) for rest_id in restaurant_ids}
+    restaurant_dc = {rest_id: secrets.choice(dc_ids) for rest_id in restaurant_ids}
+    restaurant_state = {rest_id: secrets.choice(states) for rest_id in restaurant_ids}
 
     # Create combinations for the base data
     combinations = []
